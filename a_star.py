@@ -210,6 +210,7 @@ if __name__ == "__main__":
             # Find child configuration if it is present in close and open
             for node_open_closed in open_closed_list:
                 # If catch the same configuration
+                # BUG: The comparison return True even if the two arrays are different
                 if compare(child["data"], node_open_closed["data"], size):
                     print("Child:\n" + str(child["data"]))
                     print("Node:\n" + str(node["data"]))
