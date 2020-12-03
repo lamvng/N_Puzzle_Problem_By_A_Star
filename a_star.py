@@ -79,7 +79,7 @@ def get_h_mannhatan(data, size):
             if data[i][j] != 0:
                 [x, y] = get_good_position(data[i][j], size)
                 if (x != i) or (y != j):
-                    count += (x-i) + (y-j)
+                    count += abs(x-i) + abs(y-j)
     return count
 
 # Find the blank element
@@ -156,12 +156,22 @@ def checkExist(node, nodelist):
 
 
 def printResult(node, size):
-
     space = size * 5 // 2
     if node["parent"]  != None:
         printResult(node["parent"],space)
     print("\n")
     print_puzzle(node['data'])
+
+
+# Insert child to OpenList and sort
+def addChildToOpenList(list, child):
+    index = 0
+    for cur in list:
+        if child['f_score'] > cur['f_score']:
+            index += 1
+        else:
+            break
+    list.insert(index, child)
 
 # Main functions
 # https://www.geeksforgeeks.org/a-search-algorithm/
@@ -180,7 +190,7 @@ if __name__ == "__main__":
     print("\nGenerated puzzle:")
     print_puzzle(start_data)
     
-
+    start_data = [[3, 6, 4], [8, 2, 0], [1, 7, 5]]
     # start_data = [[0,9,7,4],[10,15,3,6],[2,13,1,8],[11,5,14,12]]
 
     # Print goal puzzle
@@ -244,9 +254,12 @@ if __name__ == "__main__":
             if is_exist_in_open:
                 if child["f_score"] > child_found_open["f_score"]:
                     continue
-            
+                # else:
+                #     open_list.append(child)
+                #     open_list.remove(child_found_open)
+
             # Else, append the child in Open
-            open_list.append(child)
+            addChildToOpenList(open_list, child)
 
 
     print("\n--- Execution time: %s seconds ---" % (time.time() - start_time))
@@ -255,3 +268,9 @@ if __name__ == "__main__":
 # 1    7    0
 # 6    8    2
 # 4    3    5
+
+
+
+# 4    5    6
+# 7    8    1
+# 0    3    2
