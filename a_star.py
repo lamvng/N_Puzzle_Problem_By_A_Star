@@ -71,6 +71,17 @@ def get_h_hamming(data, size):
     return count
 
 
+# Get Manhattan distance / Taxicab Geometry
+def get_h_mannhatan(data, size):
+    count = 0
+    for i in range(0, size):
+        for j in range(0, size):
+            if data[i][j] != 0:
+                [x, y] = get_good_position(data[i][j], size)
+                if (x != i) or (y != j):
+                    count += (x-i) + (y-j)
+    return count
+
 # Find the blank element
 def find_blank(node):
     size = node["size"]
@@ -120,7 +131,7 @@ def transition(node):
                 size=node["size"],
                 data=data_new,
                 g_score=node["g_score"]+1,
-                h_score=get_h_hamming(data=data_new, size=node["size"]),
+                h_score=get_h_mannhatan(data=data_new, size=node["size"]),
                 parent=node
             )
             nodes_child.append(child_new)
@@ -145,11 +156,11 @@ def checkExist(node, nodelist):
 
 
 def printResult(node, size):
+
     space = size * 5 // 2
     if node["parent"]  != None:
         printResult(node["parent"],space)
-        print(space*' ' + '|')
-        print(space*' ' + 'v\n')
+    print("\n")
     print_puzzle(node['data'])
 
 # Main functions
@@ -240,3 +251,7 @@ if __name__ == "__main__":
 
     print("\n--- Execution time: %s seconds ---" % (time.time() - start_time))
     printResult(node, size)
+
+# 1    7    0
+# 6    8    2
+# 4    3    5
