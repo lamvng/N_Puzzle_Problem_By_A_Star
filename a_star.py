@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 from operator import itemgetter
+import time
 
 # Check if a puzzle is solvable
 def is_solvable(puzzle):
@@ -34,7 +35,7 @@ def generate_goal(size):
 def print_puzzle(puzzle):
     for row in puzzle:
         for col in row:
-            print("%6d"%col, end ='')
+            print("%5d"%col, end ='')
         print("\n")
 
 
@@ -68,12 +69,6 @@ def get_h_hamming(data, size):
                 if (x != i) or (y != j):
                     count += 1
     return count
-
-l = [[1,2,3], [4,5,6], [7,8,9]]
-
-print(get_h_hamming(l, 3))
-
-
 
 
 # Find the blank element
@@ -141,32 +136,48 @@ def compare(data1, data2, size):
     return True
 
 
-# Find a dictionary in a list of dictionary
+# Check if a configuration exists in node list
+def checkExist(node, nodelist):
+    for node_temp in nodelist:
+        if compare(node["data"], node_temp["data"], size):
+            return node_temp,True
+    return [],False
 
+
+def printResult(node, size):
+    space = size * 5 // 2
+    if node["parent"]  != None:
+        printResult(node["parent"],space)
+        print(space*' ' + '|')
+        print(space*' ' + 'v\n')
+    print_puzzle(node['data'])
 
 # Main functions
+# https://www.geeksforgeeks.org/a-search-algorithm/
 if __name__ == "__main__":
 
-    # print("INPUT DATA\n")
-    # try:
-    #     size = int(input("Puzzle size: "))
-    # except ValueError:
-    #     print("Puzzle size must be an integer.")
-    #     sys.exit(0)
+    # Timer
+    start_time = time.time()
 
-
-    size = 2
+    # Metrics
+    discovered_node = 1
+    visited_node = 1
+    
+    size = 3
     # Print generated puzzle
     start_data = generate_puzzle(size)
     print("\nGenerated puzzle:")
     print_puzzle(start_data)
     
+
+    # start_data = [[0,9,7,4],[10,15,3,6],[2,13,1,8],[11,5,14,12]]
+
     # Print goal puzzle
     goal = generate_goal(size)
     print("\nGoal puzzle:")
     print_puzzle(goal)
 
-    
+
     # Initialize root node (start node)
     start_node = create_node(
         size=size,
@@ -180,51 +191,52 @@ if __name__ == "__main__":
     open_list = []
     closed_list = []
     
+    # Put start_node in Open list
     open_list.append(start_node)
 
     # Main loop
-    while (1):
-        if len(open_list) == 0:
-            print("Open is empty. Failed.")
-            sys.exit(0)
+    while (len(open_list) != 0):
+        # Sort Open List
+        f = itemgetter('f_score')
+        open_list.sort(key=f)
+
         
         # Get node as the first element in Open
+        visited_node += 1
         node = open_list[0]
 
         # Remove node from Open and add it to Close
         open_list.remove(node)
         closed_list.append(node)
 
+        
         # Compare node to the goal
         if compare(node["data"], goal, size):
             print("Success. Exiting...")
             break
         
+
         nodes_child = []
         # Get child nodes by moving the blank space
         nodes_child = transition(node) # Get node childs with g_score and h_score, parent
+        discovered_node += len(nodes_child)
 
         for child in nodes_child:
-            open_closed_list = open_list + closed_list
+            child_found_closed, is_exist_in_close = checkExist(child, closed_list)
 
-            # Find child configuration if it is present in close and open
-            for node_open_closed in open_closed_list:
-                # If catch the same configuration
-                # BUG: The comparison return True even if the two arrays are different
-                if compare(child["data"], node_open_closed["data"], size):
-                    print("Child:\n" + str(child["data"]))
-                    print("Node:\n" + str(node["data"]))
-                    print("\n")
-                    if child["f_score"] <= node_open_closed["f_score"]:
-                        if node_open_closed in open_list:
-                            open_list.append(child)
-                            open_list.remove(node_open_closed)
-                        else:
-                            open_list.append(child)
-                            closed_list.remove(node_open_closed)
-                else:
-                    open_list.append(child)
+            # If child in Closed list, ignore this child
+            if is_exist_in_close:
+                continue
 
-            # Sort Open
-            f = itemgetter('f_score')
-            open_list.sort(key=f)
+            # If child in Open list, but this child not better than the one in Open, ignore this child
+            child_found_open, is_exist_in_open = checkExist(child, open_list)
+            if is_exist_in_open:
+                if child["f_score"] > child_found_open["f_score"]:
+                    continue
+            
+            # Else, append the child in Open
+            open_list.append(child)
+
+
+    print("\n--- Execution time: %s seconds ---" % (time.time() - start_time))
+    printResult(node, size)
